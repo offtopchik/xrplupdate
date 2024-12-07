@@ -24,7 +24,6 @@ function update_system() {
 # Функция установки всех зависимостей и пакетов
 function install_all() {
     echo -e "${GREEN}Установка базовых инструментов...${NC}"
-    # build-essential включает gcc, g++, make
     apt install -y curl git wget build-essential || {
         echo -e "${RED}Ошибка при установке базовых инструментов.${NC}"
         return 1
@@ -151,6 +150,17 @@ function uninstall_all() {
     echo -e "${GREEN}Удаление завершено.${NC}"
 }
 
+# Функция для отображения приватного ключа кошелька
+function show_wallet_key() {
+    KEY_FILE="xrpl-node-configurator/secret_key.txt"
+    if [[ -f "$KEY_FILE" ]]; then
+        echo -e "${GREEN}Приватный ключ:${NC}"
+        cat "$KEY_FILE"
+    else
+        echo -e "${RED}Файл с приватным ключом не найден. Убедитесь, что secret_key.txt присутствует в директории xrpl-node-configurator.${NC}"
+    fi
+}
+
 # Меню
 while true; do
     echo ""
@@ -162,7 +172,8 @@ while true; do
     echo "4) Проверить логи rippled"
     echo "5) Остановить ноду (rippled)"
     echo "6) Удалить все (rippled и xrpl-node-configurator)"
-    echo "7) Выход"
+    echo "7) Показать приватный ключ кошелька"
+    echo "8) Выход"
     echo -n "Ваш выбор: "
     read choice
 
@@ -186,6 +197,9 @@ while true; do
             uninstall_all
             ;;
         7)
+            show_wallet_key
+            ;;
+        8)
             echo -e "${GREEN}Выход из скрипта.${NC}"
             exit 0
             ;;
