@@ -23,7 +23,8 @@ function update_system() {
 
 # Функция установки всех зависимостей и пакетов
 function install_all() {
-    echo -e "${GREEN}Установка базовых инструментов (curl, git, wget, build-essential)...${NC}"
+    echo -e "${GREEN}Установка базовых инструментов...${NC}"
+    # build-essential включает gcc, g++, make
     apt install -y curl git wget build-essential || {
         echo -e "${RED}Ошибка при установке базовых инструментов.${NC}"
         return 1
@@ -32,6 +33,12 @@ function install_all() {
     echo -e "${GREEN}Установка Node.js...${NC}"
     curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && apt install -y nodejs || {
         echo -e "${RED}Ошибка при установке Node.js.${NC}"
+        return 1
+    }
+
+    echo -e "${GREEN}Установка дополнительных зависимостей для node-gyp...${NC}"
+    apt install -y python3 python3-dev pkg-config libffi-dev || {
+        echo -e "${RED}Ошибка при установке зависимостей для node-gyp.${NC}"
         return 1
     }
 
@@ -150,7 +157,7 @@ while true; do
     echo -e "${GREEN}STARNODE${NC}"
     echo -e "${GREEN}Выберите действие:${NC}"
     echo "1) Обновить систему"
-    echo "2) Установить все зависимости и пакеты"
+    echo "2) Установить все зависимости и пакеты (включая инструменты для node-gyp)"
     echo "3) Запустить XRPL Node Configurator"
     echo "4) Проверить логи rippled"
     echo "5) Остановить ноду (rippled)"
