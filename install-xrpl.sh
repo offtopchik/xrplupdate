@@ -150,7 +150,7 @@ function uninstall_all() {
     echo -e "${GREEN}Удаление завершено.${NC}"
 }
 
-# Функция для отображения приватного ключа кошелька
+# Функция для отображения приватного ключа (опционально, если есть файл secret_key.txt)
 function show_wallet_key() {
     KEY_FILE="xrpl-node-configurator/secret_key.txt"
     if [[ -f "$KEY_FILE" ]]; then
@@ -159,6 +159,37 @@ function show_wallet_key() {
     else
         echo -e "${RED}Файл с приватным ключом не найден. Убедитесь, что secret_key.txt присутствует в директории xrpl-node-configurator.${NC}"
     fi
+}
+
+# Функция добавления validator token
+function add_validator_token() {
+    local cfg_file="/etc/opt/ripple/rippled.cfg"
+    if [ ! -f "$cfg_file" ]; then
+        echo -e "${RED}Файл конфигурации rippled не найден по пути $cfg_file!${NC}"
+        return 1
+    fi
+
+    echo -e "${GREEN}Введите путь к файлу с validator_token или вставьте сам token:${NC}"
+    read token_input
+
+    # Если пользователь ввёл путь к файлу, читаем из него
+    if [[ -f "$token_input" ]]; then
+        token_content=$(cat "$token_input")
+    else
+        # Иначе считаем, что пользователь ввёл token напрямую
+        token_content="$token_input"
+    fi
+
+    # Проверим, есть ли секция [validator_token] в конфиге
+    if ! grep -q "\[validator_token\]" "$cfg_file"; then
+        echo "[validator_token]" >> "$cfg_file"
+    fi
+
+    # Добавляем token в конфиг
+    echo "$token_content" >> "$cfg_file"
+
+    echo -e "${GREEN}Validator token успешно добавлен. Перезапуск rippled...${NC}"
+    systemctl restart rippled
 }
 
 # Меню
@@ -173,7 +204,8 @@ while true; do
     echo "5) Остановить ноду (rippled)"
     echo "6) Удалить все (rippled и xrpl-node-configurator)"
     echo "7) Показать приватный ключ кошелька"
-    echo "8) Выход"
+    echo "8) Добавить validator token"
+    echo "9) Выход"
     echo -n "Ваш выбор: "
     read choice
 
@@ -200,6 +232,9 @@ while true; do
             show_wallet_key
             ;;
         8)
+            add_validator_token
+            ;;
+        9)
             echo -e "${GREEN}Выход из скрипта.${NC}"
             exit 0
             ;;
