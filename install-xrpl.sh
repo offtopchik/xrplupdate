@@ -150,7 +150,7 @@ function uninstall_all() {
     echo -e "${GREEN}Удаление завершено.${NC}"
 }
 
-# Функция для отображения приватного ключа (опционально, если есть файл secret_key.txt)
+# Функция для отображения приватного ключа
 function show_wallet_key() {
     KEY_FILE="xrpl-node-configurator/secret_key.txt"
     if [[ -f "$KEY_FILE" ]]; then
@@ -158,6 +158,22 @@ function show_wallet_key() {
         cat "$KEY_FILE"
     else
         echo -e "${RED}Файл с приватным ключом не найден. Убедитесь, что secret_key.txt присутствует в директории xrpl-node-configurator.${NC}"
+    fi
+}
+
+# Функция для генерации validator token
+function generate_validator_token() {
+    if ! command -v rippled &> /dev/null; then
+        echo -e "${RED}rippled не установлен. Установите зависимости сначала.${NC}"
+        return 1
+    fi
+    mkdir -p xrpl-node-configurator
+    rippled validator-keys create > xrpl-node-configurator/validator_keys.json
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}Validator keys и token сгенерированы и сохранены в xrpl-node-configurator/validator_keys.json${NC}"
+        echo -e "${GREEN}Из этого файла вы можете взять token для добавления через пункт меню 'Добавить validator token'.${NC}"
+    else
+        echo -e "${RED}Ошибка при генерации validator token.${NC}"
     fi
 }
 
@@ -203,9 +219,10 @@ while true; do
     echo "4) Проверить логи rippled"
     echo "5) Остановить ноду (rippled)"
     echo "6) Удалить все (rippled и xrpl-node-configurator)"
-    echo "7) Показать приватный ключ кошелька"
+    echo "7) Сгенерировать validator token"
     echo "8) Добавить validator token"
-    echo "9) Выход"
+    echo "9) Показать приватный ключ кошелька"
+    echo "10) Выход"
     echo -n "Ваш выбор: "
     read choice
 
@@ -229,12 +246,15 @@ while true; do
             uninstall_all
             ;;
         7)
-            show_wallet_key
+            generate_validator_token
             ;;
         8)
             add_validator_token
             ;;
         9)
+            show_wallet_key
+            ;;
+        10)
             echo -e "${GREEN}Выход из скрипта.${NC}"
             exit 0
             ;;
